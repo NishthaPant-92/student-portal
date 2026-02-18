@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="card bg-white p-4 shadow rounded">
+    <h4>📅 Schedule & Stress Check</h4>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <label>Screen Time (Hours)</label>
+        <input type="number" step="0.1" name="screen_time" class="form-control mb-3" required>
+
+        <label>Study Time (Hours)</label>
+        <input type="number" step="0.1" name="study_time" class="form-control mb-3" required>
+
+        <button class="btn btn-primary w-100">Analyze Stress</button>
+    </form>
+
+    {% if stress_status %}
+    <div class="mt-4">
+        <h5>Stress Level: {{ stress_status }}</h5>
+        <p>{{ recommendation }}</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
