@@ -66,20 +66,32 @@ def schedule_view(request):
     stress_status = None
 
     if request.method == "POST":
-        screen_time = float(request.POST.get("screen_time"))
-        study_time = float(request.POST.get("study_time"))
+        screen_time = float(request.POST.get("screen_time", 0))
+        study_time = float(request.POST.get("study_time", 0))
 
-        if screen_time > 1 and study_time > 2:
+        total_time = screen_time + study_time
+
+        # 🔥 Better logic
+        if screen_time >= 4:
             stress_status = "High Stress"
             recommendation = """
-            • Take 20 min walk
-            • Practice 10 min meditation
             • Reduce screen time
-            • Add relaxation activity
+            • Take 20 min walk
+            • Do meditation
+            • Avoid continuous scrolling
             """
+
+        elif total_time >= 6:
+            stress_status = "Moderate Stress"
+            recommendation = """
+            • Take short breaks
+            • Stay hydrated
+            • Balance study and rest
+            """
+
         else:
-            stress_status = "Normal"
-            recommendation = "Your routine looks balanced."
+            stress_status = "Balanced"
+            recommendation = "Your routine looks healthy and balanced."
 
     return render(request, "schedule.html", {
         "recommendation": recommendation,
