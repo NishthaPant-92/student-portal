@@ -59,45 +59,73 @@ def logout_view(request):
 
 @login_required
 def dashboard_view(request):
-    return render(request, 'auth/dashboard.html')
+
+    latest = DailyActivity.objects.filter(
+        user=request.user
+    ).order_by("-id").first()
+
+    screen_time = 0
+    study_time = 0
+
+    if latest:
+        screen_time = latest.screen_time
+        study_time = latest.study_time
+
+        # redirect only if HIGH
+        if latest.stress_status == "High":
+            return redirect("stress_check")
+
+    return render(request, "auth/dashboard.html", {
+        "screen_time": screen_time,
+        "study_time": study_time
+    })
 @login_required
 def schedule_view(request):
-    recommendation = None
-    stress_status = None
 
     if request.method == "POST":
+
+        wake_up = request.POST.get("wake_up")
+        sleep = request.POST.get("sleep")
+        breakfast = request.POST.get("breakfast")
+        lunch = request.POST.get("lunch")
+        dinner = request.POST.get("dinner")
+
         screen_time = float(request.POST.get("screen_time", 0))
         study_time = float(request.POST.get("study_time", 0))
 
-        total_time = screen_time + study_time
-
-        # 🔥 Better logic
+        # Stress logic
         if screen_time >= 4:
-            stress_status = "High Stress"
-            recommendation = """
-            • Reduce screen time
-            • Take 20 min walk
-            • Do meditation
-            • Avoid continuous scrolling
-            """
-
-        elif total_time >= 6:
-            stress_status = "Moderate Stress"
-            recommendation = """
-            • Take short breaks
-            • Stay hydrated
-            • Balance study and rest
-            """
-
+            stress_status = "High"
+        elif screen_time + study_time >= 6:
+            stress_status = "Moderate"
         else:
-            stress_status = "Balanced"
-            recommendation = "Your routine looks healthy and balanced."
+            stress_status = "Low"
 
-    return render(request, "schedule.html", {
-        "recommendation": recommendation,
-        "stress_status": stress_status
+        # Save
+        DailyActivity.objects.create(
+            user=request.user,
+            wake_up_time=wake_up,
+            sleep_time=sleep,
+            breakfast_time=breakfast,
+            lunch_time=lunch,
+            dinner_time=dinner,
+            screen_time=screen_time,
+            study_time=study_time,
+            stress_status=stress_status
+        )
+
+        return redirect("dashboard")   
+
+    return render(request, "schedule.html")
+@login_required
+def stress_check_view(request):
+    latest = DailyActivity.objects.filter(
+        user=request.user
+    ).order_by("-id").first()
+
+    return render(request, "stress_check.html", {
+        "latest": latest
     })
-
 
 
 # Create your views here.

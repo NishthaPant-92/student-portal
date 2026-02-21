@@ -9,6 +9,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('schedule/', views.schedule_view, name='schedule'),
+    path("stress-check/", views.stress_check_view, name="stress_check"),
 
 
     # Password reset

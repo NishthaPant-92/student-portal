@@ -1,38 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Schedule - Smart Student Life</title>
+    <title>Schedule</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body style="background: linear-gradient(135deg, #667eea, #764ba2);">
 
 <div class="container mt-5">
-    <div class="card p-4 shadow rounded">
+<div class="card p-4 shadow">
 
-        <h3>📅 Schedule & Stress Check</h3>
+<h3>📅 Daily Schedule</h3>
 
-        <form method="POST">
-            {% csrf_token %}
+<form method="POST">
+    {% csrf_token %}
 
-            <label>Screen Time (Hours)</label>
-            <input type="number" step="0.1" name="screen_time" class="form-control mb-3" required>
+    <label>Wake Up Time</label>
+    <input type="time" name="wake_up" class="form-control mb-3" required>
 
-            <label>Study Time (Hours)</label>
-            <input type="number" step="0.1" name="study_time" class="form-control mb-3" required>
+    <label>Sleep Time</label>
+    <input type="time" name="sleep" class="form-control mb-3" required>
 
-            <button class="btn btn-primary w-100">Analyze Stress</button>
-        </form>
+    <label>Breakfast Time</label>
+    <input type="time" name="breakfast" class="form-control mb-3" required>
 
-        {% if stress_status %}
-        <div class="mt-4">
-            <h5>Stress Level: {{ stress_status }}</h5>
-            <p>{{ recommendation }}</p>
-        </div>
-        {% endif %}
+    <label>Lunch Time</label>
+    <input type="time" name="lunch" class="form-control mb-3" required>
 
-        <a href="{% url 'dashboard' %}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+    <label>Dinner Time</label>
+    <input type="time" name="dinner" class="form-control mb-3" required>
 
-    </div>
+    <hr>
+
+    <label>Screen Time (Hours)</label>
+    <input type="number" step="0.1" name="screen_time" class="form-control mb-3" required>
+
+    <label>Study Time (Hours)</label>
+    <input type="number" step="0.1" name="study_time" class="form-control mb-3" required>
+
+    <button class="btn btn-primary w-100">Analyze & Save</button>
+</form>
+
+{% if stress_status %}
+<div class="mt-4">
+    <h5>Stress Level: {{ stress_status }}</h5>
+    <p>{{ recommendation }}</p>
+</div>
+{% endif %}
+
+<a href="{% url 'dashboard' %}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+
+</div>
 </div>
 
 </body>
