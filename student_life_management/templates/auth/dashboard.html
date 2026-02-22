@@ -114,6 +114,11 @@
 <div class="content">
 
     <h1 class="welcome-text">Welcome {{ user.username }}</h1>
+    {% if stress_status %}
+    <div class="alert alert-warning text-center mt-3">
+        <strong>Your Stress Level:</strong> {{ stress_status }}
+    </div>
+{% endif %}
 
     <div class="container">
         <div class="row">
@@ -156,21 +161,39 @@
         }
     });
 
-    new Chart(document.getElementById('stressChart'), {
+   new Chart(document.getElementById('stressChart'), {
         type: 'bar',
         data: {
-            labels: ['Screen Time', 'Study Time'],
+            labels: ['Screen Time', 'Study Time', 'Total Time'],
             datasets: [{
                 label: "Hours",
-                data: [{{ screen_time|default:0 }}, {{ study_time|default:0 }}]
+                data: [
+                    {{ screen_time|default:0 }},
+                    {{ study_time|default:0 }},
+                    {{ total_time|default:0 }}
+                ],
+                backgroundColor: [
+                    '#ff6384',
+                    '#36a2eb',
+                    '#4bc0c0'
+                ]
             }]
         },
         options: {
-            scales: {
-                y: { beginAtZero: true }
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
             }
         }
     });
+    
+    {% if stress_status == "High" %}
+        setTimeout(function(){
+            window.location.href = "{% url 'stress_check' %}";
+        }, 5000);
+    {% endif %}
 </script>
 
 </body>

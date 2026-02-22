@@ -66,18 +66,20 @@ def dashboard_view(request):
 
     screen_time = 0
     study_time = 0
+    total_time = 0
+    stress_status = None
 
     if latest:
         screen_time = latest.screen_time
         study_time = latest.study_time
-
-        # redirect only if HIGH
-        if latest.stress_status == "High":
-            return redirect("stress_check")
+        total_time = screen_time + study_time
+        stress_status = latest.stress_status
 
     return render(request, "auth/dashboard.html", {
         "screen_time": screen_time,
-        "study_time": study_time
+        "study_time": study_time,
+        "total_time": total_time,
+        "stress_status": stress_status
     })
 @login_required
 def schedule_view(request):
