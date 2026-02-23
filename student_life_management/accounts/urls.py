@@ -7,12 +7,18 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('signup/', views.signup_view, name='signup'),
     path('logout/', views.logout_view, name='logout'),
-    path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('dashboard/', views.dashboard_view_main, name='dashboard'),
     path('schedule/', views.schedule_view, name='schedule'),
     path("stress-check/", views.stress_check_view, name="stress_check"),
+     path("expense/", views.expense_dashboard, name="expense_dashboard"),
+    path("expense/add/", views.add_expense, name="add_expense"),
+    path("expense/delete/<int:id>/", views.delete_expense, name="delete_expense"),
+    path("expense/set-budget/", views.set_budget, name="set_budget"),
+    path("dashboard/", views.dashboard_view, name="dashboard"),
+    
 
 
-    # Password reset
+   
     path('password-reset/', 
          auth_views.PasswordResetView.as_view(
              template_name='auth/password_reset.html',
