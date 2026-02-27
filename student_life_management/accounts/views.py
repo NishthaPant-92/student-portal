@@ -9,6 +9,7 @@ from .models import DailyActivity,Expense,Budget
 from django.db.models import Sum
 from datetime import datetime
 from .models import Expense
+import json
 
 def home_view(request):
     return render(request, 'home.html')
@@ -134,15 +135,34 @@ def stress_check_view(request):
 
 @login_required
 def add_expense(request):
+
     if request.method == "POST":
+
+        title = request.POST.get("title")
+        amount = request.POST.get("amount")
+        category = request.POST.get("category")
+
+        is_split = request.POST.get("is_split") == "on"
+
+        if is_split:
+            total_people = request.POST.get("total_people")
+
+            if not total_people:
+                total_people = 1
+            else:
+                total_people = int(total_people)
+        else:
+            total_people = 1  # ✅ force default when not split
+
         Expense.objects.create(
             user=request.user,
-            title=request.POST.get("title"),
-            amount=float(request.POST.get("amount")),
-            category=request.POST.get("category"),
-            is_split=request.POST.get("is_split") == "on",
-            total_people=request.POST.get("total_people") or None,
+            title=title,
+            amount=float(amount),
+            category=category,
+            is_split=is_split,
+            total_people=total_people
         )
+
         return redirect("expense_dashboard")
 
     return render(request, "expense/add_expense.html")
@@ -153,6 +173,13 @@ from django.db.models import Sum
 from django.db.models import Sum
 from django.db.models.functions import TruncMonth
 
+from django.db.models.functions import TruncMonth, TruncWeek, TruncDay
+
+from django.db.models import Sum
+from django.db.models.functions import TruncMonth
+from .models import Expense, Budget
+
+
 @login_required
 def expense_dashboard(request):
 
@@ -162,11 +189,11 @@ def expense_dashboard(request):
 
     # 🔹 Get Latest Budget
     latest_budget = Budget.objects.filter(user=request.user).order_by("-created_at").first()
-    total_budget = latest_budget.amount if latest_budget else 0
 
+    total_budget = latest_budget.amount if latest_budget else 0
     remaining_budget = total_budget - total_spent
 
-    # 🔹 Category Data (Pie Chart)
+    # 🔹 Category Data
     category_data = (
         expenses.values("category")
         .annotate(total=Sum("amount"))
@@ -175,7 +202,7 @@ def expense_dashboard(request):
     categories = [item["category"] for item in category_data]
     category_totals = [item["total"] for item in category_data]
 
-    # 🔹 Monthly Data (Bar Chart)
+    # 🔹 Monthly Chart (Auto – No Buttons)
     monthly_data = (
         expenses.annotate(month=TruncMonth("created_at"))
         .values("month")
@@ -183,8 +210,13 @@ def expense_dashboard(request):
         .order_by("month")
     )
 
-    months = [item["month"].strftime("%b %Y") for item in monthly_data]
-    month_totals = [item["total"] for item in monthly_data]
+    labels = [item["month"].strftime("%b %Y") for item in monthly_data]
+    totals = [item["total"] for item in monthly_data]
+    # 🔹 Convert to JSON (VERY IMPORTANT)
+    categories = json.dumps(categories)
+    category_totals = json.dumps(category_totals)
+    labels = json.dumps(labels)
+    totals = json.dumps(totals)
 
     context = {
         "expenses": expenses.order_by("-created_at"),
@@ -193,8 +225,8 @@ def expense_dashboard(request):
         "remaining_budget": remaining_budget,
         "categories": categories,
         "category_totals": category_totals,
-        "months": months,
-        "month_totals": month_totals,
+        "labels": labels,
+        "totals": totals,
     }
 
     return render(request, "expense/expense_dashboard.html", context)
@@ -207,16 +239,16 @@ def delete_expense(request, id):
 def set_budget(request):
 
     if request.method == "POST":
-        amount = float(request.POST.get("amount"))
+        amount = request.POST.get("amount")
         period = request.POST.get("period")
 
         Budget.objects.create(
             user=request.user,
-            amount=amount,
+            amount=float(amount),
             period=period
         )
 
-        return redirect("expense_dashboard")
+        return redirect("expense_dashboard")  # VERY IMPORTANT
 
     return render(request, "expense/set_budget.html")
 @login_required

@@ -10,7 +10,7 @@
 
 <div class="container">
 
-    <!-- Top Navigation -->
+    <!-- 🔹 Top Navigation -->
     <div class="d-flex justify-content-between align-items-center mb-4">
 
         <a href="{% url 'dashboard' %}" class="btn btn-outline-dark">
@@ -31,7 +31,7 @@
     </div>
 
 
-    <!-- Budget Cards -->
+    <!-- 🔹 Budget Cards -->
     <div class="row mb-4">
 
         <div class="col-md-4">
@@ -57,12 +57,19 @@
 
     </div>
 
+    <!-- Budget Exceeded Alert -->
+    {% if remaining_budget < 0 %}
+    <div class="alert alert-danger text-center">
+        ⚠ You have exceeded your budget!
+    </div>
+    {% endif %}
 
-    <!-- Expense Table -->
+
+    <!-- 🔹 Expense Table -->
     <div class="card p-4 mb-4 shadow-sm">
         <h5 class="mb-3">All Expenses</h5>
 
-        <table class="table table-bordered">
+        <table class="table table-bordered table-hover">
             <thead class="table-dark">
                 <tr>
                     <th>Title</th>
@@ -112,9 +119,10 @@
     </div>
 
 
-    <!-- Charts Section -->
+    <!-- 🔹 Charts Section -->
     <div class="row">
 
+        <!-- Pie Chart -->
         <div class="col-md-6">
             <div class="card p-3 shadow-sm">
                 <h5>Category Distribution</h5>
@@ -122,6 +130,7 @@
             </div>
         </div>
 
+        <!-- Bar Chart -->
         <div class="col-md-6">
             <div class="card p-3 shadow-sm">
                 <h5>Monthly Spending</h5>
@@ -135,7 +144,9 @@
 
 
 <script>
+    // 🔹 Pie Chart
     const pieCtx = document.getElementById('pieChart');
+
     new Chart(pieCtx, {
         type: 'pie',
         data: {
@@ -146,14 +157,16 @@
         }
     });
 
+    // 🔹 Bar Chart
     const barCtx = document.getElementById('barChart');
+
     new Chart(barCtx, {
         type: 'bar',
         data: {
-            labels: {{ months|safe }},
+            labels: {{ labels|safe }},
             datasets: [{
                 label: "Monthly Spending",
-                data: {{ month_totals|safe }},
+                data: {{ totals|safe }},
             }]
         }
     });
