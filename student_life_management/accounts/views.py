@@ -14,7 +14,9 @@ import json
 def home_view(request):
     return render(request, 'home.html')
 def signup_view(request):
+
     if request.method == "POST":
+
         username = request.POST['username']
         email = request.POST['email']
         password = request.POST['password']
@@ -33,8 +35,10 @@ def signup_view(request):
             email=email,
             password=password
         )
-        messages.success(request, "Account created successfully")
-        return redirect('login')
+
+        login(request, user)
+
+        return redirect('dashboard')
 
     return render(request, 'auth/signup.html')
 
@@ -61,9 +65,12 @@ def logout_view(request):
     return redirect('login')
 
 
+from django.db.models import Sum
+from .models import DailyActivity, Expense   
 @login_required
 def dashboard_view_main(request):
 
+    # 🔹 Get latest activity
     latest = DailyActivity.objects.filter(
         user=request.user
     ).order_by("-id").first()
@@ -79,11 +86,25 @@ def dashboard_view_main(request):
         total_time = screen_time + study_time
         stress_status = latest.stress_status
 
+    # 🔹 EXPENSE DATA (NEW PART)
+    expenses = Expense.objects.filter(user=request.user)
+
+    category_data = (
+        expenses.values("category")
+        .annotate(total=Sum("amount"))
+    )
+
+    categories = [item["category"] for item in category_data]
+    category_totals = [item["total"] for item in category_data]
+
+    # 🔹 FINAL CONTEXT
     return render(request, "auth/dashboard.html", {
         "screen_time": screen_time,
         "study_time": study_time,
         "total_time": total_time,
-        "stress_status": stress_status
+        "stress_status": stress_status,
+        "categories": categories,
+        "category_totals": category_totals
     })
 @login_required
 def schedule_view(request):
@@ -168,15 +189,9 @@ def add_expense(request):
     return render(request, "expense/add_expense.html")
 from .models import Expense
 from django.db.models import Sum
-
-
+import json
 from django.db.models import Sum
-from django.db.models.functions import TruncMonth
-
 from django.db.models.functions import TruncMonth, TruncWeek, TruncDay
-
-from django.db.models import Sum
-from django.db.models.functions import TruncMonth
 from .models import Expense, Budget
 
 
@@ -185,48 +200,76 @@ def expense_dashboard(request):
 
     expenses = Expense.objects.filter(user=request.user)
 
+    # 🔹 Total spent
     total_spent = expenses.aggregate(Sum("amount"))["amount__sum"] or 0
 
-    # 🔹 Get Latest Budget
+    # 🔹 Latest budget
     latest_budget = Budget.objects.filter(user=request.user).order_by("-created_at").first()
 
-    total_budget = latest_budget.amount if latest_budget else 0
+    if latest_budget:
+        total_budget = latest_budget.amount
+        period = latest_budget.period
+    else:
+        total_budget = 0
+        period = "monthly"
+
     remaining_budget = total_budget - total_spent
 
-    # 🔹 Category Data
+    # =========================
+    # CATEGORY DISTRIBUTION
+    # =========================
     category_data = (
         expenses.values("category")
         .annotate(total=Sum("amount"))
+        .order_by("category")
     )
 
-    categories = [item["category"] for item in category_data]
-    category_totals = [item["total"] for item in category_data]
+    category_labels = [item["category"] for item in category_data]
+    category_totals = [float(item["total"]) for item in category_data]
 
-    # 🔹 Monthly Chart (Auto – No Buttons)
-    monthly_data = (
-        expenses.annotate(month=TruncMonth("created_at"))
-        .values("month")
+    # =========================
+    # TIME BASED SPENDING
+    # =========================
+    if period == "weekly":
+        grouped = expenses.annotate(group=TruncWeek("created_at"))
+        chart_title = "Weekly Spending"
+
+    elif period == "daily":
+        grouped = expenses.annotate(group=TruncDay("created_at"))
+        chart_title = "Daily Spending"
+
+    else:
+        grouped = expenses.annotate(group=TruncMonth("created_at"))
+        chart_title = "Monthly Spending"
+
+    chart_data = (
+        grouped.values("group")
         .annotate(total=Sum("amount"))
-        .order_by("month")
+        .order_by("group")
     )
 
-    labels = [item["month"].strftime("%b %Y") for item in monthly_data]
-    totals = [item["total"] for item in monthly_data]
-    # 🔹 Convert to JSON (VERY IMPORTANT)
-    categories = json.dumps(categories)
-    category_totals = json.dumps(category_totals)
-    labels = json.dumps(labels)
-    totals = json.dumps(totals)
+    labels = []
+    totals = []
+
+    for item in chart_data:
+        labels.append(item["group"].strftime("%d %b %Y"))
+        totals.append(float(item["total"]))
 
     context = {
+
         "expenses": expenses.order_by("-created_at"),
+
         "total_spent": total_spent,
         "total_budget": total_budget,
         "remaining_budget": remaining_budget,
-        "categories": categories,
-        "category_totals": category_totals,
-        "labels": labels,
-        "totals": totals,
+
+        "category_labels": json.dumps(category_labels),
+        "category_totals": json.dumps(category_totals),
+
+        "labels": json.dumps(labels),
+        "totals": json.dumps(totals),
+
+        "chart_title": chart_title,
     }
 
     return render(request, "expense/expense_dashboard.html", context)

@@ -1,92 +1,262 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Signup</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
+<title>Signup | Smart Student Life</title>
 
-        .card {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            width: 380px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-        }
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
-        h2 {
-            text-align: center;
-            margin-bottom: 25px;
-        }
+<style>
 
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-        }
+body{
+height:100vh;
+background:linear-gradient(135deg,#667eea,#764ba2);
+display:flex;
+justify-content:center;
+align-items:center;
+font-family:'Segoe UI',sans-serif;
+}
 
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
+.signup-card{
+width:420px;
+padding:40px;
+border-radius:20px;
+background:rgba(255,255,255,0.15);
+backdrop-filter:blur(12px);
+box-shadow:0 20px 40px rgba(0,0,0,0.2);
+color:white;
+animation:fadeIn 1s ease;
+}
 
-        button {
-            width: 100%;
-            padding: 12px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 15px;
-            cursor: pointer;
-        }
+input{
+border-radius:12px !important;
+padding:12px;
+}
 
-        button:hover {
-            background: #5563c1;
-        }
+.btn-custom{
+background:white;
+color:#764ba2;
+font-weight:bold;
+border-radius:12px;
+transition:0.3s;
+}
 
-        .link {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 14px;
-        }
+.btn-custom:hover{
+transform:translateY(-2px);
+box-shadow:0 10px 20px rgba(0,0,0,0.2);
+}
 
-        .link a {
-            text-decoration: none;
-            color: #667eea;
-        }
-    </style>
+.eye-icon{
+position:absolute;
+right:15px;
+top:42px;
+cursor:pointer;
+color:#555;
+}
+
+.strength-container{
+margin-top:8px;
+}
+
+.strength-circles{
+display:flex;
+gap:8px;
+margin-top:5px;
+}
+
+.circle{
+width:12px;
+height:12px;
+border-radius:50%;
+background:#ddd;
+transition:0.3s;
+}
+
+.circle.weak{
+background:red;
+}
+
+.circle.medium{
+background:orange;
+}
+
+.circle.strong{
+background:green;
+}
+
+.eye-icon{
+position:absolute;
+right:15px;
+top:38px;
+cursor:pointer;
+}
+
+@keyframes fadeIn{
+from{opacity:0; transform:translateY(20px);}
+to{opacity:1; transform:translateY(0);}
+}
+
+</style>
 </head>
+
 <body>
 
-    <div class="card">
-        <h2>Create Account</h2>
+<div class="signup-card">
 
-        <form method="POST">
-            {% csrf_token %}
-            <input type="text" name="username" placeholder="Username" required>
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+<h3 class="text-center mb-4">Create Account</h3>
 
-            <button type="submit">Create Account</button>
-        </form>
+<form method="POST">
 
-        <div class="link">
-            Already have an account?
-            <a href="{% url 'login' %}">Login</a>
-        </div>
-    </div>
+{% csrf_token %}
+
+<div class="mb-3">
+<label>Username</label>
+<input type="text" name="username" class="form-control" required>
+</div>
+
+<div class="mb-3">
+<label>Email</label>
+<input type="email" name="email" class="form-control" required>
+</div>
+
+
+<div class="mb-3 position-relative">
+
+<label>Password</label>
+
+<input type="password"
+name="password"
+id="password"
+class="form-control"
+onkeyup="checkStrength()"
+required>
+
+<span class="eye-icon"
+onclick="togglePassword('password')">👁</span>
+
+<!-- Strength Meter -->
+<div class="strength-container mt-2">
+
+<div class="strength-circles">
+
+<span class="circle" id="c1"></span>
+<span class="circle" id="c2"></span>
+<span class="circle" id="c3"></span>
+<span class="circle" id="c4"></span>
+
+</div>
+
+<p id="strengthText"></p>
+
+</div>
+
+</div>
+
+
+<div class="mb-3 position-relative">
+
+<label>Confirm Password</label>
+
+<input type="password"
+name="confirm_password"
+id="confirm"
+class="form-control"
+onkeyup="checkMatch()"
+required>
+
+<span class="eye-icon"
+onclick="togglePassword('confirm')">👁</span>
+
+<p id="matchError" style="display:none;color:#ff4d4d;">
+Passwords do not match
+</p>
+
+</div>
+
+<button class="btn btn-custom w-100 mt-3">
+Signup
+</button>
+
+<div class="text-center mt-3">
+<a href="{% url 'login' %}" style="color:white">
+Already have account? Login
+</a>
+</div>
+
+</form>
+
+</div>
+
+<script>
+
+const password = document.getElementById("password")
+const confirm = document.getElementById("confirm")
+const matchError = document.getElementById("matchError")
+
+const circles = [
+document.getElementById("c1"),
+document.getElementById("c2"),
+document.getElementById("c3"),
+document.getElementById("c4")
+]
+
+const strengthText = document.getElementById("strengthText")
+
+function checkStrength(){
+
+let value = password.value
+let score = 0
+
+if(value.length >= 8) score++
+if(/[A-Z]/.test(value)) score++
+if(/[0-9]/.test(value)) score++
+if(/[^A-Za-z0-9]/.test(value)) score++
+
+circles.forEach(c => {
+c.className = "circle"
+})
+
+if(score <= 1){
+circles[0].classList.add("weak")
+strengthText.innerHTML = "Weak Password"
+}
+
+else if(score == 2 || score == 3){
+circles[0].classList.add("medium")
+circles[1].classList.add("medium")
+strengthText.innerHTML = "Medium Password"
+}
+
+else{
+circles.forEach(c => c.classList.add("strong"))
+strengthText.innerHTML = "Strong Password"
+}
+
+}
+
+function checkMatch(){
+
+if(password.value !== confirm.value){
+matchError.style.display="block"
+}else{
+matchError.style.display="none"
+}
+
+}
+
+function togglePassword(id){
+
+let input=document.getElementById(id)
+
+if(input.type === "password"){
+input.type = "text"
+}else{
+input.type = "password"
+}
+
+}
+
+</script>
 
 </body>
 </html>

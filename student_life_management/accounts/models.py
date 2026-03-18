@@ -72,9 +72,10 @@ class Budget(models.Model):
         ("daily", "Daily"),
     ]
 
-    period = models.CharField(max_length=10, choices=PERIOD_CHOICES)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount = models.FloatField()
+    period = models.CharField(max_length=20, choices=PERIOD_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
-
     def __str__(self):
         return f"{self.user.username} - {self.period} - ₹{self.amount}"
 
